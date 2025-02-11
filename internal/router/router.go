@@ -15,7 +15,7 @@ func SetupRouter(handler handler.Handler, secretKey []byte) *gin.Engine {
 	authGroup := router.Group("/")
 	authGroup.Use(middleware.AuthMiddleware(secretKey))
 	{
-		//authGroup.GET("/flat/create", flatHandler.CreateFlat)
+		authGroup.GET("/api/info", handler.Test)
 
 	}
 

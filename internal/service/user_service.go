@@ -1,13 +1,47 @@
 package service
 
-import "Backend-trainee-assignment-winter-2025/internal/repository"
+import (
+	"Backend-trainee-assignment-winter-2025/internal/repository"
+	"context"
+	"fmt"
+	"log/slog"
 
-type UserService interface{}
+	"github.com/golang-jwt/jwt/v5"
+)
 
-type userService struct {
-	repo repository.UserRepository
+type UserService interface {
+	CreateUser(ctx context.Context, username, password string) (string, error)
 }
 
-func NewUserService(repo repository.UserRepository) UserService {
-	return &userService{repo: repo}
+type userService struct {
+	repo      repository.UserRepository
+	secretKey []byte
+	logger    *slog.Logger
+}
+
+func NewUserService(repo repository.UserRepository, secretKey []byte, logger *slog.Logger) UserService {
+	return &userService{repo: repo, secretKey: secretKey, logger: logger}
+}
+
+func (u *userService) generateJWToken(username string) (string, error) {
+	type Claims struct {
+		Username string `json:"username"`
+		jwt.RegisteredClaims
+	}
+	claims := Claims{
+		Username:         username,
+		RegisteredClaims: jwt.RegisteredClaims{},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims) 
+	tokenString, err := token.SignedString(u.secretKey)
+	if err != nil {
+		return "", fmt.Errorf("failed to sign token: %w", err)
+	}
+
+	return tokenString, nil
+}
+
+func (u *userService) CreateUser(ctx context.Context, username, password string) (string, error) {
+	return u.generateJWToken(username)
 }

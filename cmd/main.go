@@ -30,13 +30,13 @@ func main() {
 	purchaseRepo := postgres.NewPurchaseRepository(db)
 	merchRepo := postgres.NewMerchRepository(db)
 
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(userRepo, []byte(cfg.SecretKey), logger)
 	coinService := service.NewCoinService(coinRepo)
 	purchaseService := service.NewPurchaseService(purchaseRepo, coinRepo, merchRepo)
 
-	handler := handler.NewController(userService, coinService, purchaseService,logger)
+	handler := handler.NewHandler(coinService, userService, purchaseService, logger)
 
-	app := router.SetupRouter(handler,[]byte(cfg.SecretKey))
+	app := router.SetupRouter(handler, []byte(cfg.SecretKey))
 	app.Run()
 
 }

@@ -11,7 +11,6 @@ import (
 
 type Claims struct {
 	Username string `json:"username"`
-	Password string `json:"password"`
 	jwt.RegisteredClaims
 }
 
@@ -31,7 +30,8 @@ func AuthMiddleware(secretKey []byte) gin.HandlerFunc {
 
 		tokenString := parts[1]
 
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		claims := &Claims{}
+		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("неверный метод подписи: %v", token.Header["alg"])
 			}
@@ -39,19 +39,13 @@ func AuthMiddleware(secretKey []byte) gin.HandlerFunc {
 		})
 
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Невалидный токен: " + err.Error()})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err})
+			fmt.Println(err)
 			return
 		}
 
-		// 3. Проверяем, что токен валиден и извлекаем claims
-		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			username := claims["username"].(string)
-			password := claims["password"].(string)
-
-			c.Set("username", username)
-			c.Set("password", password)
-
-			// Продолжаем выполнение запроса
+		if token.Valid {
+			c.Set("username", claims.Username)
 			c.Next()
 		} else {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Невалидный токен"})
