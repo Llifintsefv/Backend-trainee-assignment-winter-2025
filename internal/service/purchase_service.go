@@ -5,9 +5,11 @@ import "Backend-trainee-assignment-winter-2025/internal/repository"
 type PurchaseService interface{}
 
 type purchaseService struct {
-	repo repository.PurchaseRepository
+	purchaseRepo repository.PurchaseRepository
+	coinRepo     repository.CoinTransactionRepository
+	merchRepo    repository.MerchRepository
 }
 
-func NewPurchaseService(repo repository.PurchaseRepository) PurchaseService {
-	return &purchaseService{repo: repo}
+func NewPurchaseService(purchaseRepo repository.PurchaseRepository, coinRepo repository.CoinTransactionRepository, merchRepo repository.MerchRepository) PurchaseService {
+	return &purchaseService{purchaseRepo: purchaseRepo, coinRepo: coinRepo, merchRepo: merchRepo}
 }
