@@ -10,7 +10,7 @@ import (
 func SetupRouter(handler handler.Handler, secretKey []byte) *gin.Engine {
 	router := gin.Default()
 
-	router.POST("/api/auth", handler.NewUser)
+	router.POST("/api/auth", handler.AuthUser)
 
 	authGroup := router.Group("/")
 	authGroup.Use(middleware.AuthMiddleware(secretKey))

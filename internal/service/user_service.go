@@ -8,11 +8,12 @@ import (
 	"log/slog"
 
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 type UserService interface {
-	CreateUser(ctx context.Context, username, password string) (string, error)
+	AuthUser(ctx context.Context, username, password string) (string, error)
 }
 
 type userService struct {
@@ -44,9 +45,8 @@ func (u *userService) generateJWToken(username string) (string, error) {
 	return tokenString, nil
 }
 
-func (u *userService) CreateUser(ctx context.Context, username, password string) (string, error) {
-	_, err := u.repo.GetUserByUsername(ctx, username)
-
+func (u *userService) AuthUser(ctx context.Context, username, password string) (string, error) {
+	user, err := u.repo.GetUserByUsername(ctx, username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			err := u.repo.CreateUser(ctx, username, password)
@@ -59,8 +59,12 @@ func (u *userService) CreateUser(ctx context.Context, username, password string)
 			u.logger.ErrorContext(ctx, "failed to get user by username", "error", err)
 			return "", fmt.Errorf("failed to get user: %w", err)
 		}
-	} else {
-		u.logger.InfoContext(ctx, "user already exists, logging in", "username", username)
+	}
+
+	valid := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	if valid != nil {
+		u.logger.ErrorContext(ctx, "invalid password", "error", valid)
+		return "", fmt.Errorf("invalid password: %w", valid)
 	}
 
 	token, err := u.generateJWToken(username)
