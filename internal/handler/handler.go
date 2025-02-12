@@ -2,6 +2,7 @@ package handler
 
 import (
 	"Backend-trainee-assignment-winter-2025/internal/models"
+	"Backend-trainee-assignment-winter-2025/internal/pkg/validator"
 	"Backend-trainee-assignment-winter-2025/internal/service"
 	"log/slog"
 	"net/http"
@@ -31,6 +32,12 @@ func (h *handler) NewUser(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&AuthRequest); err != nil {
 		h.logger.ErrorContext(ctx, "failed to bind json", "error", err)
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{Errors: err.Error()})
+		return
+	}
+
+	if err := validator.ValidateStruct(AuthRequest); err != nil {
+		h.logger.ErrorContext(ctx, "failed to validate struct", "error", err)
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{Errors: err.Error()})
 		return
 	}

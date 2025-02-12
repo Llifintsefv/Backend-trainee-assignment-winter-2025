@@ -7,8 +7,8 @@ type ErrorResponse struct {
 
 // AuthRequest - структура запроса для аутентификации
 type AuthRequest struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required"`
 }
 
 // AuthResponse - структура ответа для аутентификации
@@ -18,8 +18,8 @@ type AuthResponse struct {
 
 // SendCoinRequest - структура запроса для отправки монет
 type SendCoinRequest struct {
-	ToUser string `json:"toUser" binding:"required"`
-	Amount int    `json:"amount" binding:"required"`
+	ToUser string `json:"toUser" validate:"required"`
+	Amount int    `json:"amount" validate:"required"`
 }
 
 // InfoResponse - структура ответа с информацией о пользователе
