@@ -33,7 +33,7 @@ func (u *userService) generateJWToken(username string) (string, error) {
 		RegisteredClaims: jwt.RegisteredClaims{},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims) 
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(u.secretKey)
 	if err != nil {
 		return "", fmt.Errorf("failed to sign token: %w", err)
@@ -43,5 +43,20 @@ func (u *userService) generateJWToken(username string) (string, error) {
 }
 
 func (u *userService) CreateUser(ctx context.Context, username, password string) (string, error) {
-	return u.generateJWToken(username)
+
+	err := u.repo.CreateUser(ctx, username, password)
+
+	if err != nil {
+		u.logger.ErrorContext(ctx, "failed to create user", "error", err)
+		return "", fmt.Errorf("failed to create user: %w", err)
+	}
+
+	token, err := u.generateJWToken(username)
+
+	if err != nil {
+		u.logger.ErrorContext(ctx, "failed to generate token", "error", err)
+		return "", fmt.Errorf("failed to generate token: %w", err)
+	}
+
+	return token, nil
 }

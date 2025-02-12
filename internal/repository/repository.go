@@ -1,5 +1,7 @@
 package repository
 
+import "context"
+
 type CoinTransactionRepository interface {
 }
 
@@ -10,4 +12,5 @@ type PurchaseRepository interface {
 }
 
 type UserRepository interface {
+	CreateUser(ctx context.Context, username, password string) (error)
 }
