@@ -1,6 +1,9 @@
 package repository
 
-import "context"
+import (
+	"Backend-trainee-assignment-winter-2025/internal/models"
+	"context"
+)
 
 type CoinTransactionRepository interface {
 }
@@ -12,5 +15,6 @@ type PurchaseRepository interface {
 }
 
 type UserRepository interface {
-	CreateUser(ctx context.Context, username, password string) (error)
+	CreateUser(ctx context.Context, username, password string) error
+	GetUserByUsername(ctx context.Context, username string) (models.User, error)
 }

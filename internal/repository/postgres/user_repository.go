@@ -34,3 +34,12 @@ func (u *userRepository) CreateUser(ctx context.Context, username, password stri
 
 	return nil
 }
+
+func (u *userRepository) GetUserByUsername(ctx context.Context, username string) (models.User, error) {
+	var user models.User
+	result := u.DB.Where("username = ?", username).First(&user)
+	if result.Error != nil {
+		return models.User{}, result.Error
+	}
+	return user, nil
+}

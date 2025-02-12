@@ -3,10 +3,12 @@ package service
 import (
 	"Backend-trainee-assignment-winter-2025/internal/repository"
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 
 	"github.com/golang-jwt/jwt/v5"
+	"gorm.io/gorm"
 )
 
 type UserService interface {
@@ -43,16 +45,25 @@ func (u *userService) generateJWToken(username string) (string, error) {
 }
 
 func (u *userService) CreateUser(ctx context.Context, username, password string) (string, error) {
-
-	err := u.repo.CreateUser(ctx, username, password)
+	_, err := u.repo.GetUserByUsername(ctx, username)
 
 	if err != nil {
-		u.logger.ErrorContext(ctx, "failed to create user", "error", err)
-		return "", fmt.Errorf("failed to create user: %w", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err := u.repo.CreateUser(ctx, username, password)
+			if err != nil {
+				u.logger.ErrorContext(ctx, "failed to create user", "error", err)
+				return "", fmt.Errorf("failed to create user: %w", err)
+			}
+			u.logger.InfoContext(ctx, "user created", "username", username)
+		} else {
+			u.logger.ErrorContext(ctx, "failed to get user by username", "error", err)
+			return "", fmt.Errorf("failed to get user: %w", err)
+		}
+	} else {
+		u.logger.InfoContext(ctx, "user already exists, logging in", "username", username)
 	}
 
 	token, err := u.generateJWToken(username)
-
 	if err != nil {
 		u.logger.ErrorContext(ctx, "failed to generate token", "error", err)
 		return "", fmt.Errorf("failed to generate token: %w", err)
